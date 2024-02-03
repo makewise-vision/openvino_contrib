@@ -3,6 +3,7 @@ package org.intel.openvino;
 import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /** A utility class to load the OpenVINO native libraries required for the OpenVINO Runtime API. */
@@ -85,19 +86,29 @@ public final class NativeLibrary {
             }
 
             // Load native libraries.
-            for (String lib : nativeLibs) {
-                // On Linux, TBB and GNA libraries has .so.2 soname
-                String version = lib.startsWith("tbb") || lib.equals("gna") ? "2" : null;
-                lib = getLibraryName(lib, version);
+            for (String lib : nativeLibs) {                
+                lib = getLibraryName(lib, null);
                 File nativeLibTmpFile = new File(tmpDir, lib);
+                if(!nativeLibTmpFile.exists() || !nativeLibTmpFile.isFile()){
+                    // On Linux, TBB and GNA libraries has .so.2 soname
+                    if(lib.startsWith("tbb") || lib.equals("gna")){
+                        lib = getLibraryName(lib, "2");
+                        nativeLibTmpFile = new File(tmpDir, lib);
+                        if(!nativeLibTmpFile.exists() || !nativeLibTmpFile.isFile()){
+                            continue;
+                        }
+                    } else { 
+                        continue;
+                    }
+                }
                 try {
                     System.load(nativeLibTmpFile.getAbsolutePath());
                 } catch (UnsatisfiedLinkError ex) {
-                    logger.warning("Failed to load library " + file + ": " + ex);
+                    logger.log(Level.WARNING,"Failed to load library " + file + ": " + ex.getMessage(),ex);
                 }
             }
         } catch (IOException ex) {
-            logger.warning("Failed to load native Inference Engine libraries: " + ex.getMessage());
+            logger.log(Level.WARNING,"Failed to load native Inference Engine libraries: " + ex.getMessage(),ex);
         } finally {
             if (resources_list != null) {
                 try {
