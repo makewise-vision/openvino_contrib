@@ -6,7 +6,10 @@ import java.nio.file.Files;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/** A utility class to load the OpenVINO native libraries required for the OpenVINO Runtime API. */
+/**
+ * A utility class to load the OpenVINO native libraries required for the
+ * OpenVINO Runtime API.
+ */
 public final class NativeLibrary {
 
     public static final String NATIVE_LIBRARY_NAME = "inference_engine_java_api";
@@ -41,19 +44,21 @@ public final class NativeLibrary {
     }
 
     /**
-     * Use this method to initialize native libraries. Other files like plugins.xml and *.mvcmd will
-     * be also copied to temporal location which makes them visible in runtime. To Do: fix for
-     * Android!
+     * Use this method to initialize native libraries. Other files like
+     * plugins.xml and *.mvcmd will be also copied to temporal location which
+     * makes them visible in runtime. To Do: fix for Android!
      */
     public static void loadNativeLibs() {
         // A set of required libraries which are listed in dependency order.
-        final String[] nativeLibs = {"tbb", "tbbmalloc", "openvino", "inference_engine_java_api"};
+        String nativeLibsStr = System.getProperty("org.intel.openvino.nativeLibs", "tbb tbbmalloc openvino inference_engine_java_api");
+
+        String[] nativeLibs = nativeLibsStr.split("\\s+");
 
         InputStream resources_list = null;
         try {
             // Get a list of all native resources (libraries, plugins and other files).
-            resources_list =
-                    NativeLibrary.class.getClassLoader().getResourceAsStream("resources_list.txt");
+            resources_list
+                    = NativeLibrary.class.getClassLoader().getResourceAsStream("resources_list.txt");
             BufferedReader r = new BufferedReader(new InputStreamReader(resources_list));
 
             // Create a temporal folder to unpack native files.
@@ -65,11 +70,11 @@ public final class NativeLibrary {
                 // Check that file name is valid
                 if (!file.chars()
                         .allMatch(
-                                c ->
-                                        Character.isLetterOrDigit(c)
-                                                || c == '.'
-                                                || c == '_'
-                                                || c == '-')) {
+                                c
+                                -> Character.isLetterOrDigit(c)
+                                || c == '.'
+                                || c == '_'
+                                || c == '-')) {
                     throw new IOException("Invalid file path: " + file);
                 }
 
@@ -86,29 +91,29 @@ public final class NativeLibrary {
             }
 
             // Load native libraries.
-            for (String lib : nativeLibs) {                
+            for (String lib : nativeLibs) {
                 lib = getLibraryName(lib, null);
                 File nativeLibTmpFile = new File(tmpDir, lib);
-                if(!nativeLibTmpFile.exists() || !nativeLibTmpFile.isFile()){
+                if (!nativeLibTmpFile.exists() || !nativeLibTmpFile.isFile()) {
                     // On Linux, TBB and GNA libraries has .so.2 soname
-                    if(lib.startsWith("tbb") || lib.equals("gna")){
+                    if (lib.startsWith("tbb") || lib.equals("gna")) {
                         lib = getLibraryName(lib, "2");
                         nativeLibTmpFile = new File(tmpDir, lib);
-                        if(!nativeLibTmpFile.exists() || !nativeLibTmpFile.isFile()){
+                        if (!nativeLibTmpFile.exists() || !nativeLibTmpFile.isFile()) {
                             continue;
                         }
-                    } else { 
+                    } else {
                         continue;
                     }
                 }
                 try {
                     System.load(nativeLibTmpFile.getAbsolutePath());
                 } catch (UnsatisfiedLinkError ex) {
-                    logger.log(Level.WARNING,"Failed to load library " + file + ": " + ex.getMessage(),ex);
+                    logger.log(Level.WARNING, "Failed to load library " + file + ": " + ex.getMessage(), ex);
                 }
             }
         } catch (IOException ex) {
-            logger.log(Level.WARNING,"Failed to load native Inference Engine libraries: " + ex.getMessage(),ex);
+            logger.log(Level.WARNING, "Failed to load native Inference Engine libraries: " + ex.getMessage(), ex);
         } finally {
             if (resources_list != null) {
                 try {
