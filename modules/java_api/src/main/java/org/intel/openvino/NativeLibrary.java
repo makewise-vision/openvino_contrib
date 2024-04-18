@@ -3,6 +3,9 @@ package org.intel.openvino;
 import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,19 +31,21 @@ public final class NativeLibrary {
         }
     }
 
-    private static String getLibraryName(String name, String linux_ver) {
+    private static Optional<File> getLibraryFilePath(String name, Map<String, File> mapOfFiles) {
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.contains("win")) {
-            return name + ".dll";
+            name = name + ".dll";
         } else if (osName.contains("mac")) {
-            return "lib" + name + ".dylib";
+            name = "lib" + name + ".dylib";
         } else {
             name = "lib" + name + ".so";
-            if (linux_ver != null) {
-                name += "." + linux_ver;
-            }
         }
-        return name;
+        final String libFile = name;
+        Optional<String> findFirst = mapOfFiles.keySet().stream().filter((t) -> t.startsWith(libFile)).sorted().findFirst();
+        if (findFirst.isPresent()) {
+            return Optional.of(mapOfFiles.get(findFirst.get()));
+        }
+        return Optional.empty();
     }
 
     /**
@@ -53,6 +58,8 @@ public final class NativeLibrary {
         String nativeLibsStr = System.getProperty("org.intel.openvino.nativeLibs", "tbb tbbmalloc openvino inference_engine_java_api");
 
         String[] nativeLibs = nativeLibsStr.split("\\s+");
+
+        Map<String, File> mapOfFiles = new HashMap<>();
 
         InputStream resources_list = null;
         try {
@@ -88,28 +95,22 @@ public final class NativeLibrary {
                 try (InputStream in = url.openStream()) {
                     Files.copy(in, nativeLibTmpFile.toPath());
                 }
+                mapOfFiles.put(file, nativeLibTmpFile);
             }
 
             // Load native libraries.
             for (String lib : nativeLibs) {
-                lib = getLibraryName(lib, null);
-                File nativeLibTmpFile = new File(tmpDir, lib);
-                if (!nativeLibTmpFile.exists() || !nativeLibTmpFile.isFile()) {
-                    // On Linux, TBB and GNA libraries has .so.2 soname
-                    if (lib.startsWith("tbb") || lib.equals("gna")) {
-                        lib = getLibraryName(lib, "2");
-                        nativeLibTmpFile = new File(tmpDir, lib);
-                        if (!nativeLibTmpFile.exists() || !nativeLibTmpFile.isFile()) {
-                            continue;
-                        }
-                    } else {
-                        continue;
+                logger.log(Level.INFO, "Load of lib {0}", lib);
+                Optional<File> libraryFilePath = getLibraryFilePath(lib, mapOfFiles);
+                if (libraryFilePath.isPresent()) {
+                    logger.log(Level.INFO, "Load lib {0} from path {1}", new Object[]{lib, libraryFilePath.get()});
+                    try {
+                        System.load(libraryFilePath.get().getAbsolutePath());
+                    } catch (UnsatisfiedLinkError ex) {
+                        logger.log(Level.WARNING, "Failed to load library " + file + ": " + ex.getMessage(), ex);
                     }
-                }
-                try {
-                    System.load(nativeLibTmpFile.getAbsolutePath());
-                } catch (UnsatisfiedLinkError ex) {
-                    logger.log(Level.WARNING, "Failed to load library " + file + ": " + ex.getMessage(), ex);
+                } else {
+                    logger.log(Level.WARNING, "Load lib {0} skiped! No file found", lib);
                 }
             }
         } catch (IOException ex) {
