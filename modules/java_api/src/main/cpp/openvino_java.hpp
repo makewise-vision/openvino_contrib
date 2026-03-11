@@ -30,6 +30,7 @@ extern "C"
     JNIEXPORT jint JNICALL Java_org_intel_openvino_Any_asInt(JNIEnv *, jobject, jlong);
     JNIEXPORT jobject JNICALL Java_org_intel_openvino_Any_asList(JNIEnv *, jobject, jlong);
     JNIEXPORT jstring JNICALL Java_org_intel_openvino_Any_asString(JNIEnv *, jobject, jlong);
+    JNIEXPORT void JNICALL Java_org_intel_openvino_Any_delete(JNIEnv *, jobject, jlong);
 
     // ov::Model
     JNIEXPORT jstring JNICALL Java_org_intel_openvino_Model_getName(JNIEnv *, jobject, jlong);
@@ -110,6 +111,7 @@ extern "C"
 
     // ov::Dimension
     JNIEXPORT jint JNICALL Java_org_intel_openvino_Dimension_getLength(JNIEnv *, jobject, jlong);
+    JNIEXPORT void JNICALL Java_org_intel_openvino_Dimension_delete(JNIEnv *, jobject, jlong);
 
     // ov::Output<ov::Node>
     JNIEXPORT jstring JNICALL Java_org_intel_openvino_Output_GetAnyName(JNIEnv *, jobject, jlong);
@@ -122,6 +124,7 @@ extern "C"
     JNIEXPORT jlong JNICALL Java_org_intel_openvino_PartialShape_GetDimension(JNIEnv *, jobject, jlong, jint);
     JNIEXPORT jintArray JNICALL Java_org_intel_openvino_PartialShape_GetMaxShape(JNIEnv *, jobject, jlong);
     JNIEXPORT jintArray JNICALL Java_org_intel_openvino_PartialShape_GetMinShape(JNIEnv *, jobject, jlong);
+    JNIEXPORT void JNICALL Java_org_intel_openvino_PartialShape_delete(JNIEnv *, jobject, jlong);
 
 #ifdef __cplusplus
 }
