@@ -104,6 +104,11 @@ public class Tensor extends Wrapper {
         return asByte(nativeObj);
     }
 
+    /** Returns the tensor data as a long array. */
+    public long[] as_long() {
+        return asLong(nativeObj);
+    }
+
     /*----------------------------------- native methods -----------------------------------*/
     private static native long TensorCArray(int type, int[] shape, long cArray);
 
@@ -124,6 +129,8 @@ public class Tensor extends Wrapper {
     private static native int[] asInt(long addr);
 
     private static native byte[] asByte(long addr);
+
+    private static native long[] asLong(long addr);
 
     private static native int GetSize(long addr);
 
