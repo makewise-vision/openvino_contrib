@@ -14,7 +14,7 @@ println 'CPU architecture: ' + arch
 
 
 def nativesCPP;
-def openvinoVersion = "2025.1"
+def openvinoVersion = "2026.4.1"
 
 def native_resources = []
 def tbb_dir = System.getenv('TBB_DIR')
