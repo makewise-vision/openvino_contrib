@@ -1,8 +1,7 @@
 # Copyright (C) 2018-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
-project(inference_engine_java_api)
 cmake_minimum_required(VERSION 3.22)
+project(inference_engine_java_api)
 
 if (NOT CMAKE_CROSSCOMPILING)
     set(JAVA_AWT_LIBRARY NotNeeded)
