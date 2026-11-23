@@ -70,6 +70,10 @@ native_resources.each {
 }
 file('src/main/native').mkdirs()
 file('src/main/native/resources_list.txt').text = "${resources_list}"
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
 sourceSets {
     main {
         java {
